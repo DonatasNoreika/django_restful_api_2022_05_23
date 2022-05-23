@@ -14,6 +14,8 @@ class Post(models.Model):
     class Meta:
         ordering = ['-created']
 
+    def __str__(self):
+        return f"POST: {self.title}, author: {self.user} ({self.created})"
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
@@ -24,12 +26,19 @@ class Comment(models.Model):
     class Meta:
         ordering = ['-created']
 
+    def __str__(self):
+        return f"Comment: {self.body}, author: {self.user} ({self.created}) "
 
 class PostLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"Post: {self.post}, author: {self.user}"
 
 class CommentLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Comment: {self.comment}, author: {self.user}"
