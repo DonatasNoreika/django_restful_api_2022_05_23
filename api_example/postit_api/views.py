@@ -1,8 +1,9 @@
 from django.shortcuts import render
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, mixins, status
 from .models import Post, PostLike, Comment, CommentLike
-from .serializers import PostSerializer, CommentSerializer
+from .serializers import PostSerializer, CommentSerializer, PostLikeSerializer
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 
 class PostList(generics.ListCreateAPIView):
@@ -71,3 +72,26 @@ class CommentDetail(generics.RetrieveUpdateDestroyAPIView):
             return self.update(request, *args, **kwargs)
         else:
             raise ValidationError('Negalima koreguoti svetimų komentarų!')
+
+
+class PostLikeCreate(generics.CreateAPIView, mixins.DestroyModelMixin):
+    serializer_class = PostLikeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        post = Post.objects.get(pk=self.kwargs['pk'])
+        return PostLike.objects.filter(post=post, user=user)
+
+    def perform_create(self, serializer):
+        if self.get_queryset().exists():
+            raise ValidationError('Jūs jau palikote patiktuką šiam pranešimui!')
+        post = Post.objects.get(pk=self.kwargs['pk'])
+        serializer.save(user=self.request.user, post=post)
+
+    def delete(self, request, *args, **kwargs):
+        if self.get_queryset().exists():
+            self.get_queryset().delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError('Jūs nepalikote patiktuko po šiuo pranešimu!')

@@ -17,10 +17,20 @@ class PostSerializer(serializers.ModelSerializer):
     user_id = serializers.ReadOnlyField(source='user.id')
     comments = serializers.StringRelatedField(many=True)
     comment_count = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'user', 'title', 'body', 'created', 'comments', 'comment_count']
+        fields = ['id', 'user_id', 'user', 'title', 'body', 'created', 'comments', 'comment_count', 'likes']
 
     def get_comment_count(self, obj):
         return Comment.objects.filter(post=obj).count()
+
+    def get_likes(self, post):
+        return PostLike.objects.filter(post=post).count()
+
+
+class PostLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostLike
+        fields = ['id']
